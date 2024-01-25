@@ -37,26 +37,32 @@ const loadPhotoAsync = async (container) => {
     if (!response.ok) {
         throw new Error("Ошибка в получении данных");
     }
-    const data = await response.json();//вернуть объект
-    data.forEach((item) => console.log(item)); //так можно посмотреть,что получилось на предварительном этапе
-    // data.forEach((item) => {
-    //     const countLike = getCountLike(item.id);
-    //     container.insertAdjacentHTML(
-    //         "beforeend",
-    //         `
-    //         <div class="photo">
-    //         <img src="${item.urls.raw}" alt="${item.alt_description}">
-    //         <div class="photo-info">
-    //             <p>Фотограф: ${item.user.first_name} ${item.user.last_name ? item.user.last_name : ""}</p>
-    //             <div class="like-wrapp" data-id="${item.id}">
-    //                 <p class="count-like">${countLike}</p>
-    //                 <svg class="like" width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M8.5,1C7.5206299,1,6.6352539,1.4022217,6,2.0504761C5.3648071,1.4022827,4.4793701,1,3.5,1  C1.5670166,1,0,2.5670166,0,4.5S2,8,6,11c4-3,6-4.5670166,6-6.5S10.4329834,1,8.5,1z" fill="#1D1D1B"/></svg>
-    //             </div>
-    //         </div>
-    //     </div>
-    //       `
-    //     )
-    // });
+    const photo = await response.json();//вернуть объект
+    // photo.forEach((item) => console.log(item)); //так можно посмотреть,что получилось на предварительном этапе
+    photo.forEach((item) => {
+        const countLike = getCountLike(item.id);
+        container.insertAdjacentHTML(
+            "beforeend",
+            `
+            <div class="photo">
+            <img src="${item.urls.raw}" alt="${item.alt_description}">
+            <div class="photo-info">
+                <p>Фотограф: ${item.user.first_name} ${item.user.last_name ? item.user.last_name : ""}</p>
+                <div class="div-like" photo-id="${item.id}">
+                    <p class="count-like">${countLike}</p>
+                    <svg class="like" width="30px" height="30px" viewBox="0 0 12 12" 
+                    enable-background="new 0 0 12 12" id="Слой_1" version="1.1"
+                     xml:space="preserve" xmlns="http://www.w3.org/2000/svg" 
+                     xmlns:xlink="http://www.w3.org/1999/xlink"><path 
+                     d="M8.5,1C7.5206299,1,6.6352539,1.4022217,6,2.0504761C5.3648071,
+                     1.4022827,4.4793701,1,3.5,1  C1.5670166,1,0,2.5670166,0,4.5S2,
+                     8,6,11c4-3,6-4.5670166,6-6.5S10.4329834,1,8.5,1z" fill="gray"/></svg>
+                </div>
+            </div>
+        </div>
+          `
+        )
+    });
 }
 
 // Увеличить счетчик лайков.
@@ -65,10 +71,11 @@ const addLike = (photoId) => {
         likeStorage[photoId] = 1;
     }
     else {
-        likeStorage[photoId] += 1;
+        likeStorage[photoId] ++;
     }
 }
 
+// Вернуть количество лайков.
 const getCountLike = (photoId) => {
     let countLike = 0;
     if (typeof (likeStorage[photoId]) == "undefined" && likeStorage[photoId] == null) {
@@ -80,38 +87,38 @@ const getCountLike = (photoId) => {
     return countLike;
 }
 
-// Обработчик клика лайк
-const clickLikeEventHandler = (e) => {
-    const divLikeWrapp = e.target.closest(".like-wrapp");
-    if (divLikeWrapp == null) {
+// Обработчик на лайки
+const clickLike = (e) => {
+    const divLike = e.target.closest(".div-like");
+    if (divLike == null) {
         return;
     }
 
-    const photoId = divLikeWrapp.getAttribute('data-id');
+    const photoId = divLike.getAttribute('photo-id');
     addLike(photoId);
     const countLike = getCountLike(photoId);
 
-    const svgEl = e.target.closest('path');
-    if (countLike > 0 && svgEl !== null) {
-        svgEl.style.fill = "red";
+    const colorEl = e.target.closest('path');
+    if (countLike > 0 && colorEl !== null) {
+        colorEl.style.fill = "blue";
 
     }
-    const countEl = divLikeWrapp.querySelector('.count-like');
+    const countEl = divLike.querySelector('.count-like');
     if (countEl !== null) {
         countEl.textContent = countLike;
     }
 }
 
-// Установить событие КликЛайка для фотографий.
-const addEventLike = (containerPhoto) => {
-    containerPhoto.addEventListener('click', clickLikeEventHandler);
+// Установка события для фотографий.
+const addEventLike = (clickFhoto) => {
+    clickFhoto.addEventListener('click', clickLike);
 }
 
-// Инициализировать компоненты фотографий.
-async function initComponentsPhotoAsync(containerToLoadPhoto) {
-    await loadPhotoAsync(containerToLoadPhoto);
-    addEventLike(containerToLoadPhoto);
+// Инициализация.
+async function init(loadPhotoInContainer) {
+    await loadPhotoAsync(loadPhotoInContainer);
+    addEventLike(loadPhotoInContainer);
 }
 
-const containerToLoadPhoto = document.querySelector('#photo-container');
-initComponentsPhotoAsync(containerToLoadPhoto);
+const loadPhotoInContainer = document.querySelector('#photo-container');
+init(loadPhotoInContainer);
